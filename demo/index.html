@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Leaflet-Tile-PixelLayer Demo</title>
+    <meta charset="utf-8" />
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
+
+    <script src="../src/index.js"></script>
+
+    <style>
+      html,
+      body,
+      #map {
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <script>
+      var Esri_DarkGreyCanvas = L.tileLayer(
+        'http://{s}.sm.mapstack.stamen.com/' +
+          '(toner-lite,$fff[difference],$fff[@23],$fff[hsl-saturation@20])/' +
+          '{z}/{x}/{y}.png',
+        {
+          attribution:
+            'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, ' +
+            'NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community'
+        }
+      )
+
+      var map = L.map('map', {
+        layers: [Esri_DarkGreyCanvas]
+      })
+
+      map.setView([3.204961844910741, 126.08253479003908], 3)
+
+      $.getJSON('temp.json', function(data) {
+        var tilePixelLayer = L.tilePixelLayer({
+          data: data
+        })
+        map.addLayer(tilePixelLayer)
+      })
+    </script>
+  </body>
+</html>

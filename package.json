@@ -1,0 +1,38 @@
+{
+  "name": "Leaflet.Tile.PixelLayer",
+  "version": "1.0.0",
+  "description": "A custom tile layer for leaflet to visualise grid vector data",
+  "scripts": {
+    "start": "gulp",
+    "build": "gulp build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zzcyrus/Leaflet.Tile.PixelLayer.git"
+  },
+  "keywords": [
+    "leaflet",
+    "tile",
+    "pixel",
+    "grid",
+    "vector",
+    "visualisation"
+  ],
+  "author": "zzcyrus@outlook.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zzcyrus/Leaflet.Tile.PixelLayer/issues"
+  },
+  "homepage": "https://github.com/zzcyrus/Leaflet.Tile.PixelLayer#readme",
+  "devDependencies": {
+    "@babel/core": "^7.5.4",
+    "@babel/preset-env": "^7.5.4",
+    "babel-preset-es2015": "^6.9.0",
+    "gulp": "^4.0.0",
+    "gulp-babel": "^8.0.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-connect": "^5.7.0",
+    "gulp-rename": "^1.4.0",
+    "gulp-uglify": "^3.0.2"
+  }
+}
