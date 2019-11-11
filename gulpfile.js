@@ -28,4 +28,5 @@ gulp.task('default', function() {
   })
   gulp.watch('./src/**.js', gulp.series('build'))
   gulp.watch('./gulpfile.js', gulp.series('build'))
+  gulp.watch('./demo/index.html', gulp.series('build'))
 })

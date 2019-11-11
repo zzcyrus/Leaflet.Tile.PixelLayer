@@ -54,9 +54,9 @@
     options: {
       data: null,
       overlayAlpha: 230,
-      unit: '',
+      gap: 2,
       zIndex: 7,
-      gradient: segmentColorScale([[233.15, [56, 4, 45]], [243.15, [48, 0, 106]], [253.15, [0, 14, 134]], [256.15, [3, 44, 144]], [218.15, [9, 69, 162]], [263.15, [37, 110, 174]], [268.15, [4, 147, 204]], [275.15, [17, 180, 240]], [278.15, [92, 214, 205]], [283.15, [112, 190, 125]], [288.15, [161, 209, 115]], [293.15, [255, 247, 105]], [298.15, [240, 200, 68]], [303.15, [247, 151, 19]], [308.15, [214, 30, 0]], [313.15, [151, 14, 2]], [318.15, [107, 11, 0]], [323.15, [73, 1, 3]]])
+      gradient: []
     },
     map: null,
     builder: null,
@@ -75,7 +75,7 @@
     triggerDraw: [],
     initialize: function initialize(options) {
       L.setOptions(this, options);
-      L.TileLayer.prototype.initialize.call(this, options);
+      this.gradient = segmentColorScale(options.gradient);
     },
     createTile: function createTile(coords) {
       var dom = L.DomUtil.create('canvas', 'leaflet-pixel-tile');
@@ -101,12 +101,14 @@
       }), dom;
     },
     onAdd: function onAdd(map) {
+      var _this = this;
+
       var that = this;
-      that.triggerDraw.splice(0, this.triggerDraw.length);
-      that.map = map;
-      that.handleZoom();
-      that.initHandlers();
-      that.buildGrid(that.options.data, function (t) {
+      this.triggerDraw.splice(0, this.triggerDraw.length);
+      this.map = map;
+      this.handleZoom();
+      this.initHandlers();
+      this.buildGrid(that.options.data, function (t) {
         that.gridDataBuilt = t;
 
         for (var n = 0; n < that.triggerDraw.length; n++) {
@@ -115,9 +117,12 @@
 
         that.triggerDraw = [];
       });
-      that.map.on('click', function (e) {
-        console.log('map clicked');
-        console.log(e);
+      this.map.on('click', function (e) {
+        var latlng = e.latlng;
+        var lat = latlng.lat,
+            lng = latlng.lng;
+        var gridValue = that.gridDataBuilt.interpolate(lng, lat);
+        _this.options.clickEvt && _this.options.clickEvt(e, gridValue);
       });
       L.TileLayer.prototype.onAdd.call(this, map);
     },
@@ -264,8 +269,15 @@
       var that = this;
       var x = bounds.x;
       var tileX = 0;
-      var xGap = 2;
-      var yGap = 2;
+      var gap = this.options.gap;
+
+      if (!Number.isInteger(this.options.gap) || this.options.gap < 1) {
+        console.warn('Option Gap Must be interger and greater than 0!');
+        gap = 2;
+      }
+
+      var xGap = gap;
+      var yGap = gap;
       var mask = this.createMask(ctx, bounds);
 
       function interpolateColumn(x, tileX) {
@@ -281,7 +293,7 @@
               var gridValue = that.gridDataBuilt.interpolate(λ, φ);
 
               if (isValue(gridValue)) {
-                color = that.options.gradient(gridValue, that.options.overlayAlpha);
+                color = that.gradient(gridValue, that.options.overlayAlpha);
               }
             }
           }
