@@ -55,7 +55,7 @@
     options: {
       data: null,
       overlayAlpha: 230,
-      unit: '',
+      gap: 2,
       zIndex: 7,
       gradient: []
     },
@@ -271,8 +271,13 @@
       var that = this
       var x = bounds.x
       var tileX = 0
-      var xGap = 2
-      var yGap = 2
+      var gap = this.options.gap
+      if (!Number.isInteger(this.options.gap) || this.options.gap < 1) {
+        console.warn('Option Gap Must be interger and greater than 0!')
+        gap = 2
+      }
+      var xGap = gap
+      var yGap = gap
       var mask = this.createMask(ctx, bounds)
       function interpolateColumn(x, tileX) {
         for (
