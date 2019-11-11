@@ -127,18 +127,20 @@
     },
     onAdd: function(map) {
       var that = this
-      that.triggerDraw.splice(0, this.triggerDraw.length)
-      that.map = map
-      that.handleZoom()
-      that.initHandlers()
-      that.buildGrid(that.options.data, function(t) {
+      this.triggerDraw.splice(0, this.triggerDraw.length)
+      this.map = map
+      this.handleZoom()
+      this.initHandlers()
+      this.buildGrid(that.options.data, function(t) {
         that.gridDataBuilt = t
         for (var n = 0; n < that.triggerDraw.length; n++) that.triggerDraw[n]()
         that.triggerDraw = []
       })
-      that.map.on('click', function(e) {
-        console.log('map clicked')
-        console.log(e)
+      this.map.on('click', e => {
+        const { latlng } = e
+        const { lat, lng } = latlng
+        var gridValue = that.gridDataBuilt.interpolate(lng, lat)
+        this.options.clickEvt && this.options.clickEvt(e, gridValue)
       })
       L.TileLayer.prototype.onAdd.call(this, map)
     },
