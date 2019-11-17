@@ -43,10 +43,12 @@
 
       map.setView([3.204961844910741, 126.08253479003908], 3)
 
-      $.getJSON('temp.json', function(data) {
+      // user data.json directly or use png_data.json and set url option
+      $.getJSON('png_data.json', function(data) {
         var tilePixelLayer = L.tilePixelLayer({
           data: data,
-          gap: 2,
+          gap: 1,
+          url: './data.png',
           overlayAlpha: 230,
           gradient: [
             [233.15, [56, 4, 45]],

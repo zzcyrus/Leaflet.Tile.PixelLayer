@@ -1,6 +1,41 @@
 'use strict';
 
 (function () {
+  function png2GridData(options) {
+    var url = options.url,
+        headerData = options.data;
+    return new Promise(function (resolve) {
+      if (!url) resolve(headerData);
+      var min = headerData.min;
+      var img = new Image();
+      img.src = url;
+
+      img.onload = function () {
+        var canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        var imgdata = ctx.getImageData(0, 0, img.width, img.height);
+        var gridData = [];
+
+        for (var i = 0; i < imgdata.data.length; i += 4) {
+          var r = imgdata.data[i].toString();
+          var g = imgdata.data[i + 1].toString();
+          var b = imgdata.data[i + 2].toString();
+          var kValue = Number(r + g + b) - Math.abs(min);
+          gridData.push(kValue);
+        }
+
+        var data = [{
+          header: headerData,
+          data: gridData
+        }];
+        resolve(data);
+      };
+    });
+  }
+
   function isValue(x) {
     return x !== null && x !== undefined;
   }
@@ -107,24 +142,27 @@
       this.triggerDraw.splice(0, this.triggerDraw.length);
       this.map = map;
       this.handleZoom();
-      this.initHandlers();
-      this.buildGrid(that.options.data, function (t) {
-        that.gridDataBuilt = t;
+      png2GridData(this.options).then(function (res) {
+        _this.buildGrid(res, function (t) {
+          that.gridDataBuilt = t;
 
-        for (var n = 0; n < that.triggerDraw.length; n++) {
-          that.triggerDraw[n]();
-        }
+          for (var n = 0; n < that.triggerDraw.length; n++) {
+            that.triggerDraw[n]();
+          }
 
-        that.triggerDraw = [];
+          that.triggerDraw = [];
+        });
+
+        _this.map.on('click', function (e) {
+          var latlng = e.latlng;
+          var lat = latlng.lat,
+              lng = latlng.lng;
+          var gridValue = that.gridDataBuilt.interpolate(lng, lat);
+          _this.options.clickEvt && _this.options.clickEvt(e, gridValue);
+        });
+
+        L.TileLayer.prototype.onAdd.call(_this, map);
       });
-      this.map.on('click', function (e) {
-        var latlng = e.latlng;
-        var lat = latlng.lat,
-            lng = latlng.lng;
-        var gridValue = that.gridDataBuilt.interpolate(lng, lat);
-        _this.options.clickEvt && _this.options.clickEvt(e, gridValue);
-      });
-      L.TileLayer.prototype.onAdd.call(this, map);
     },
     onRemove: function onRemove(map) {
       this.gridDataBuilt = null;
@@ -187,7 +225,6 @@
       this.date = new Date(header.refTime);
       this.date.setHours(this.date.getHours() + header.forecastTime);
       this.grid = [];
-      var inner = Math.floor(this.ni * this.Δλ) >= 360;
 
       for (var i = 0, y = 0; y < this.nj; y++) {
         var result = [];
@@ -200,10 +237,8 @@
           }
         }
 
-        if (inner) {
-          result.push(result[0]);
-          this.grid[y] = result;
-        }
+        result.push(result[0]);
+        this.grid[y] = result;
       }
 
       callback({

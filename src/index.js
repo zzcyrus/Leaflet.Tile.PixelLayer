@@ -1,5 +1,38 @@
 'use strict'
 ;(function() {
+  function png2GridData(options) {
+    const { url, data: headerData } = options
+    return new Promise(resolve => {
+      if (!url) resolve(headerData)
+      const { min } = headerData
+      const img = new Image()
+      img.src = url
+      img.onload = function() {
+        const canvas = document.createElement('canvas')
+        canvas.width = img.width
+        canvas.height = img.height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0)
+        const imgdata = ctx.getImageData(0, 0, img.width, img.height)
+        const gridData = []
+        for (let i = 0; i < imgdata.data.length; i += 4) {
+          const r = imgdata.data[i].toString()
+          const g = imgdata.data[i + 1].toString()
+          const b = imgdata.data[i + 2].toString()
+          const kValue = Number(r + g + b) - Math.abs(min)
+          gridData.push(kValue)
+        }
+        const data = [
+          {
+            header: headerData,
+            data: gridData
+          }
+        ]
+        resolve(data)
+      }
+    })
+  }
+
   function isValue(x) {
     return x !== null && x !== undefined
   }
@@ -111,19 +144,21 @@
       this.triggerDraw.splice(0, this.triggerDraw.length)
       this.map = map
       this.handleZoom()
-      this.initHandlers()
-      this.buildGrid(that.options.data, function(t) {
-        that.gridDataBuilt = t
-        for (var n = 0; n < that.triggerDraw.length; n++) that.triggerDraw[n]()
-        that.triggerDraw = []
+      png2GridData(this.options).then(res => {
+        this.buildGrid(res, function(t) {
+          that.gridDataBuilt = t
+          for (var n = 0; n < that.triggerDraw.length; n++)
+            that.triggerDraw[n]()
+          that.triggerDraw = []
+        })
+        this.map.on('click', e => {
+          const { latlng } = e
+          const { lat, lng } = latlng
+          var gridValue = that.gridDataBuilt.interpolate(lng, lat)
+          this.options.clickEvt && this.options.clickEvt(e, gridValue)
+        })
+        L.TileLayer.prototype.onAdd.call(this, map)
       })
-      this.map.on('click', e => {
-        const { latlng } = e
-        const { lat, lng } = latlng
-        var gridValue = that.gridDataBuilt.interpolate(lng, lat)
-        this.options.clickEvt && this.options.clickEvt(e, gridValue)
-      })
-      L.TileLayer.prototype.onAdd.call(this, map)
     },
     onRemove: function(map) {
       this.gridDataBuilt = null
@@ -185,7 +220,6 @@
       this.date = new Date(header.refTime)
       this.date.setHours(this.date.getHours() + header.forecastTime)
       this.grid = []
-      var inner = Math.floor(this.ni * this.Δλ) >= 360
       for (var i = 0, y = 0; y < this.nj; y++) {
         var result = []
         for (var x = 0; x < this.ni; x++, i++) {
@@ -194,10 +228,8 @@
             result[x] = this.replaceNaNValue
           }
         }
-        if (inner) {
-          result.push(result[0])
-          this.grid[y] = result
-        }
+        result.push(result[0])
+        this.grid[y] = result
       }
       callback({
         date: this.date,
