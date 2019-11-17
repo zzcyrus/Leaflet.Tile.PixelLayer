@@ -2,6 +2,10 @@
 
 一个基于 Leaflet 瓦片图层的扩展插件，通常用来展示气象格点数据。
 
+# 演示
+
+[Demo](https://kael.top/Leaflet.Tile.PixelLayer/demo/)
+
 # 使用
 
 两种数据方式：

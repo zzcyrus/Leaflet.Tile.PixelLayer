@@ -4,6 +4,10 @@ A pixel layer using Leaflet.TileLayer based on grid vector data, mostly use in m
 
 [中文文档](./README_CN.md)
 
+# Demo
+
+[Deem](https://kael.top/Leaflet.Tile.PixelLayer/demo/)
+
 # Usage
 
 ```js
