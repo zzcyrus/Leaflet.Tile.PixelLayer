@@ -100,24 +100,21 @@
     date: null,
     replaceNaN: true,
     replaceNaNValue: 0,
-    zooming: false,
     λ0: null,
     φ0: null,
     Δλ: null,
     Δφ: null,
     ni: null,
     nj: null,
-    triggerDraw: [],
     initialize: function initialize(options) {
       L.setOptions(this, options);
       this.gradient = segmentColorScale(options.gradient);
     },
     createTile: function createTile(coords) {
-      var dom = L.DomUtil.create('canvas', 'leaflet-pixel-tile');
+      var dom = L.DomUtil.create('canvas', 'leafvar-pixel-tile');
       var size = this.getTileSize();
       dom.width = size.x;
       dom.height = size.y;
-      if (this.zooming) return dom;
       var ctx = dom.getContext('2d');
       var bounds = {
         x: coords.x * dom.width,
@@ -126,32 +123,16 @@
         w: dom.width,
         h: dom.height
       };
-      var that = this;
-      return that.gridDataBuilt ? that.interpolateField(ctx, bounds, function (image) {
-        ctx.putImageData(image, 0, 0);
-      }) : that.triggerDraw.push(function () {
-        that.interpolateField(ctx, bounds, function (image) {
-          ctx.putImageData(image, 0, 0);
-        });
-      }), dom;
+      this.interpolateField(ctx, bounds);
+      return dom;
     },
     onAdd: function onAdd(map) {
       var _this = this;
 
       var that = this;
-      this.triggerDraw.splice(0, this.triggerDraw.length);
       this.map = map;
-      this.handleZoom();
       png2GridData(this.options).then(function (res) {
-        _this.buildGrid(res, function (t) {
-          that.gridDataBuilt = t;
-
-          for (var n = 0; n < that.triggerDraw.length; n++) {
-            that.triggerDraw[n]();
-          }
-
-          that.triggerDraw = [];
-        });
+        _this.buildGrid(res);
 
         _this.map.on('click', function (e) {
           var latlng = e.latlng;
@@ -166,41 +147,7 @@
     },
     onRemove: function onRemove(map) {
       this.gridDataBuilt = null;
-      this.triggerDraw && this.triggerDraw.splice(0, this.triggerDraw.length);
       L.TileLayer.prototype.onRemove.call(this, map);
-    },
-    initHandlers: function initHandlers() {
-      var that = this;
-      this.map.on('zoomstart', function () {
-        that.lastZoomDate = Date.now();
-        that.options.maxNativeZoom = that._tileZoom;
-        L.setOptions(that, that.options);
-        that.zooming = true;
-      });
-    },
-    handleZoom: function handleZoom() {
-      var that = this;
-      that.oldMapZoom = that.map.getZoom();
-      that.oldTileZoom = that._tileZoom;
-      clearInterval(that.map.zoomInterval);
-      that.map.zoomInterval = setInterval(function () {
-        if (Date.now() - that.lastZoomDate > 500 && that.zooming) {
-          that.zooming = false;
-          that.options.maxNativeZoom = 13;
-          L.setOptions(that, that.options);
-          var e = that.oldMapZoom - that.map.getZoom() > 0.2;
-          var n = that.oldTileZoom != Math.floor(that.map.getZoom());
-          var r = void 0 === that.oldTileZoom;
-
-          if (e || n || r) {
-            that.redraw();
-            that.oldTileZoom = that._tileZoom;
-            that.oldMapZoom = that.map.getZoom();
-            that.options.maxNativeZoom = that._tileZoom;
-            L.setOptions(that, that.options);
-          }
-        }
-      }, 300);
     },
     createBuilder: function createBuilder(_data) {
       var that = this;
@@ -212,7 +159,7 @@
         interpolate: that.bilinearInterpolateScalar
       };
     },
-    buildGrid: function buildGrid(gridData, callback) {
+    buildGrid: function buildGrid(gridData) {
       var that = this;
       this.builder = this.createBuilder(gridData[0]);
       var header = this.builder.header;
@@ -241,7 +188,7 @@
         this.grid[y] = result;
       }
 
-      callback({
+      that.gridDataBuilt = {
         date: this.date,
         interpolate: function interpolate(λ, φ) {
           if (!that.grid) return null;
@@ -269,7 +216,7 @@
 
           return null;
         }
-      });
+      };
     },
     pointToCoord: function pointToCoord(x, y, zoom) {
       var location = this.map.unproject(L.point(x, y), zoom);
@@ -341,9 +288,7 @@
         }
       }
 
-      ;
-
-      (function batchInterpolate() {
+      var batchInterpolate = function batchInterpolate() {
         var start = Date.now();
 
         while (tileX < bounds.w) {
@@ -357,8 +302,10 @@
           }
         }
 
-        render(mask.imageData);
-      })();
+        ctx.putImageData(mask.imageData, 0, 0);
+      };
+
+      batchInterpolate();
     }
   });
 

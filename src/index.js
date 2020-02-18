@@ -1,28 +1,28 @@
 'use strict'
 ;(function() {
   function png2GridData(options) {
-    const { url, data: headerData } = options
+    var { url, data: headerData } = options
     return new Promise(resolve => {
       if (!url) resolve(headerData)
-      const { min } = headerData
-      const img = new Image()
+      var { min } = headerData
+      var img = new Image()
       img.src = url
       img.onload = function() {
-        const canvas = document.createElement('canvas')
+        var canvas = document.createElement('canvas')
         canvas.width = img.width
         canvas.height = img.height
-        const ctx = canvas.getContext('2d')
+        var ctx = canvas.getContext('2d')
         ctx.drawImage(img, 0, 0)
-        const imgdata = ctx.getImageData(0, 0, img.width, img.height)
-        const gridData = []
-        for (let i = 0; i < imgdata.data.length; i += 4) {
-          const r = imgdata.data[i].toString()
-          const g = imgdata.data[i + 1].toString()
-          const b = imgdata.data[i + 2].toString()
-          const kValue = Number(r + g + b) - Math.abs(min)
+        var imgdata = ctx.getImageData(0, 0, img.width, img.height)
+        var gridData = []
+        for (var i = 0; i < imgdata.data.length; i += 4) {
+          var r = imgdata.data[i].toString()
+          var g = imgdata.data[i + 1].toString()
+          var b = imgdata.data[i + 2].toString()
+          var kValue = Number(r + g + b) - Math.abs(min)
           gridData.push(kValue)
         }
-        const data = [
+        var data = [
           {
             header: headerData,
             data: gridData
@@ -99,24 +99,21 @@
     date: null,
     replaceNaN: true,
     replaceNaNValue: 0,
-    zooming: false,
     λ0: null,
     φ0: null,
     Δλ: null,
     Δφ: null,
     ni: null,
     nj: null,
-    triggerDraw: [],
     initialize: function(options) {
       L.setOptions(this, options)
       this.gradient = segmentColorScale(options.gradient)
     },
     createTile: function(coords) {
-      var dom = L.DomUtil.create('canvas', 'leaflet-pixel-tile')
+      var dom = L.DomUtil.create('canvas', 'leafvar-pixel-tile')
       var size = this.getTileSize()
       dom.width = size.x
       dom.height = size.y
-      if (this.zooming) return dom
       var ctx = dom.getContext('2d')
       var bounds = {
         x: coords.x * dom.width,
@@ -125,35 +122,17 @@
         w: dom.width,
         h: dom.height
       }
-      var that = this
-      return (
-        that.gridDataBuilt
-          ? that.interpolateField(ctx, bounds, function(image) {
-              ctx.putImageData(image, 0, 0)
-            })
-          : that.triggerDraw.push(function() {
-              that.interpolateField(ctx, bounds, function(image) {
-                ctx.putImageData(image, 0, 0)
-              })
-            }),
-        dom
-      )
+      this.interpolateField(ctx, bounds)
+      return dom
     },
     onAdd: function(map) {
       var that = this
-      this.triggerDraw.splice(0, this.triggerDraw.length)
       this.map = map
-      this.handleZoom()
       png2GridData(this.options).then(res => {
-        this.buildGrid(res, function(t) {
-          that.gridDataBuilt = t
-          for (var n = 0; n < that.triggerDraw.length; n++)
-            that.triggerDraw[n]()
-          that.triggerDraw = []
-        })
+        this.buildGrid(res)
         this.map.on('click', e => {
-          const { latlng } = e
-          const { lat, lng } = latlng
+          var { latlng } = e
+          var { lat, lng } = latlng
           var gridValue = that.gridDataBuilt.interpolate(lng, lat)
           this.options.clickEvt && this.options.clickEvt(e, gridValue)
         })
@@ -162,40 +141,7 @@
     },
     onRemove: function(map) {
       this.gridDataBuilt = null
-      this.triggerDraw && this.triggerDraw.splice(0, this.triggerDraw.length)
       L.TileLayer.prototype.onRemove.call(this, map)
-    },
-    initHandlers: function() {
-      var that = this
-      this.map.on('zoomstart', function() {
-        that.lastZoomDate = Date.now()
-        that.options.maxNativeZoom = that._tileZoom
-        L.setOptions(that, that.options)
-        that.zooming = true
-      })
-    },
-    handleZoom: function() {
-      var that = this
-      that.oldMapZoom = that.map.getZoom()
-      that.oldTileZoom = that._tileZoom
-      clearInterval(that.map.zoomInterval)
-      that.map.zoomInterval = setInterval(function() {
-        if (Date.now() - that.lastZoomDate > 500 && that.zooming) {
-          that.zooming = false
-          that.options.maxNativeZoom = 13
-          L.setOptions(that, that.options)
-          var e = that.oldMapZoom - that.map.getZoom() > 0.2
-          var n = that.oldTileZoom != Math.floor(that.map.getZoom())
-          var r = void 0 === that.oldTileZoom
-          if (e || n || r) {
-            that.redraw()
-            that.oldTileZoom = that._tileZoom
-            that.oldMapZoom = that.map.getZoom()
-            that.options.maxNativeZoom = that._tileZoom
-            L.setOptions(that, that.options)
-          }
-        }
-      }, 300)
     },
     createBuilder: function(data) {
       var that = this
@@ -207,7 +153,7 @@
         interpolate: that.bilinearInterpolateScalar
       }
     },
-    buildGrid: function(gridData, callback) {
+    buildGrid: function(gridData) {
       var that = this
       this.builder = this.createBuilder(gridData[0])
       var header = this.builder.header
@@ -231,7 +177,7 @@
         result.push(result[0])
         this.grid[y] = result
       }
-      callback({
+      that.gridDataBuilt = {
         date: this.date,
         interpolate: function(λ, φ) {
           if (!that.grid) return null
@@ -268,7 +214,7 @@
 
           return null
         }
-      })
+      }
     },
     pointToCoord: function(x, y, zoom) {
       var location = this.map.unproject(L.point(x, y), zoom)
@@ -337,7 +283,7 @@
         }
       }
 
-      ;(function batchInterpolate() {
+      var batchInterpolate = () => {
         var start = Date.now()
 
         while (tileX < bounds.w) {
@@ -351,8 +297,10 @@
           }
         }
 
-        render(mask.imageData)
-      })()
+        ctx.putImageData(mask.imageData, 0, 0)
+      }
+
+      batchInterpolate()
     }
   })
 
