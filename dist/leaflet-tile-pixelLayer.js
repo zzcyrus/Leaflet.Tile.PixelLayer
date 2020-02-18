@@ -260,7 +260,6 @@
 
       var xGap = this.map.getZoom() <= 4 ? gap > 2 ? 2 : gap : gap;
       var yGap = xGap;
-      console.log(xGap);
       var mask = this.createMask(ctx, bounds);
 
       function interpolateColumn(x, tileX) {
