@@ -6,7 +6,7 @@ A pixel layer using Leaflet.TileLayer based on grid vector data, mostly use in m
 
 # Demo
 
-[Deem](https://kael.top/Leaflet.Tile.PixelLayer/demo/)
+[demo](https://kael.top/Leaflet.Tile.PixelLayer/demo/)
 
 # Usage
 
