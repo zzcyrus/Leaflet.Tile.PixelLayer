@@ -47,7 +47,6 @@
       $.getJSON('png_data.json', function(data) {
         var tilePixelLayer = L.tilePixelLayer({
           data: data,
-          gap: 2,
           url: './data.png',
           overlayAlpha: 230,
           gradient: [

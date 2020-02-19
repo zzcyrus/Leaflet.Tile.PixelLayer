@@ -226,9 +226,7 @@
       if (!ctx) return null;
       var width = bounds.w;
       var height = bounds.h;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-      ctx.fill();
-      var imageData = ctx.getImageData(0, 0, width, height);
+      var imageData = new ImageData(width, height);
       var imageDataRaw = imageData.data;
       return {
         imageData: imageData,
@@ -251,13 +249,7 @@
       var that = this;
       var x = bounds.x;
       var tileX = 0;
-      var gap = this.options.gap;
-
-      if (!Number.isInteger(this.options.gap) || this.options.gap < 1) {
-        console.warn('Option Gap Must be interger and greater than 0!');
-        gap = 2;
-      }
-
+      var gap = 4;
       var xGap = this.map.getZoom() <= 4 ? gap > 2 ? 2 : gap : gap;
       var yGap = xGap;
       var mask = this.createMask(ctx, bounds);
