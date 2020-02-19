@@ -17,7 +17,6 @@
 var tilePixelLayer = L.tilePixelLayer({
   data: data,
   url: './data.png',  // 仅在png加载中生效
-  gap: 2,      //    大于1的整数，数字越小，渲染效果越好，越消耗性能
   overlayAlpha: 230,  //  透明度
   gradient: [
     [233.15, [56, 4, 45]],

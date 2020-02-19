@@ -14,7 +14,6 @@ A pixel layer using Leaflet.TileLayer based on grid vector data, mostly use in m
 var tilePixelLayer = L.tilePixelLayer({
   data: data,  //     see demo/data.json,
   url: './data.png', // need this option if use png data
-  gap: 2,      //    1 => 10:   clear => Mosaic, recomend 2 on retina screen and 4 on normal
   overlayAlpha: 230,  //  0-255 layer opacity alpha in rgba
   gradient: [
     [233.15, [56, 4, 45]],
