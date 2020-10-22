@@ -5,6 +5,7 @@
 # 演示
 
 [Demo](https://kael.top/Leaflet.Tile.PixelLayer/demo/)
+[相关blog说明](https://kael.top/2020/05/17/web-grid-data-render-1/)
 
 # 使用
 

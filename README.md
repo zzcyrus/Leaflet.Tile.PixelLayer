@@ -3,6 +3,7 @@
 A pixel layer using Leaflet.TileLayer based on grid vector data, mostly use in meteorological data like NC or Grib2.
 
 [中文文档](./README_CN.md)
+[相关blog说明](https://kael.top/2020/05/17/web-grid-data-render-1/)
 
 # Demo
 
